@@ -15,6 +15,8 @@ import java.security.MessageDigest;
 //Must be caught to support sha-256 hashing
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+//Read files
+import java.io.File;
 
 
 public class PasswordCrack {
@@ -30,6 +32,21 @@ public class PasswordCrack {
 			//Were done here
 			return;
 		}
+		
+		File dictionaryFile = new File(args[0]);
+		
+		if (!dictionaryFile.exists()) {
+			System.err.println("Error " + args[0] + " does not exist.");
+			return;
+		}
+		
+		File databaseFile = new File(args[1]);
+		if (!dictionaryFile.exists()) {
+			System.err.println("Error: " + args[1] + " does not exist.");
+			return;
+		}
+		
+	
 		
 		
 		
@@ -72,13 +89,13 @@ public class PasswordCrack {
 				}
 				
 				//String representation of the hex
-				StringBuffer sRep = new StringBuffer();
+				String hash = "";
 				for (byte b : data) {
-					sRep.append(Integer.toHexString(0xFF & b));
+					hash += Integer.toHexString(0xFF & b);
 				}
 				
-				//Return a string of the hex falue
-				return sRep.toString();
+				//Return a string of the hex value
+				return hash;
 			}
 			
 			//Handle exceptions
