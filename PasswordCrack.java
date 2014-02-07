@@ -69,7 +69,7 @@ public class PasswordCrack {
 		Implements multithreaded techniques and design patterns
 		
 		@param File dictionaryFile the the dictionary file
-		@param String databaseFile the the database file
+		@param File databaseFile the the database file
 	*/
 	public PasswordCrack(File dictionaryFile, File databaseFile) {
 		
