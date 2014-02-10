@@ -35,6 +35,13 @@ public class User {
 	public String getHashedPassword() {
 		return hashedPassword;
 	}
+	/**
+		Getter for the username
+		@return String username
+	*/
+	public String getUsername() {
+		return username;
+	}
 	
 }
 	

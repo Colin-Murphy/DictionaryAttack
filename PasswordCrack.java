@@ -56,6 +56,7 @@ public class PasswordCrack {
 			return;
 		}
 		
+		
 		//If we got here then the input appears to be good
 		new PasswordCrack(dictionaryFile, databaseFile);
 				
@@ -76,18 +77,23 @@ public class PasswordCrack {
 		ArrayList<String> passwords = new ArrayList<String>();
 		ArrayList<User> users = new ArrayList<User>();
 		
+		//Reader for reading the input files
 		BufferedReader reader;
+		
+		//Read the dictionary first 
 		try {
 			reader = new BufferedReader
 				(new FileReader(dictionaryFile));
 		}
 		
+		//File not found, tell the user and give up
 		catch(FileNotFoundException e) {
 			System.err.println("File " + dictionaryFile.getName() + 
 				" does not exist");
 			return;
 		}
-			
+		
+		//Go line by line and put the password into the passwords array
 		String line = "";
 		try {
 			while ((line = reader.readLine()) !=null) {
@@ -95,16 +101,52 @@ public class PasswordCrack {
 			}
 		}
 		
+		//Something went wrong reading the file, tell the user and give up
 		catch(IOException e) {
 			System.err.println("Error reading " + dictionaryFile.getName());
 			return;
 		}
 		
+		//Read the database next
+		try {
+			reader = new BufferedReader
+				(new FileReader(databaseFile));
+		}
+		
+		//File not found, tell the user and give up
+		catch(FileNotFoundException e) {
+			System.err.println("File " + databaseFile.getName() + 
+				" does not exist");
+			return;
+		}
+		
+		try {
+			while((line = reader.readLine()) !=null) {
+				String[] tokens = line.split("\\s+");
+				users.add(new User(tokens[0],tokens[1]));
+				
+			}
+		}
+		
+		//Something went wrong reading the file, tell the user and give up
+		catch(IOException e) {
+			System.err.println("Error reading " + databaseFile.getName());
+			return;
+		}
+		
+		
+		for (User u: users) {
+			System.out.print(u.getUsername());
+			System.out.println(": " + u.getHashedPassword());
+		}
+		
+		
+		
 		for (String password:passwords) {
 			System.out.println(password);
 		}
 
-	}//End of PasswordCrack
+	}//End of PasswordCrack constructor
 	
 	/**
 		Converts a given string to a SHA256 hash as many times as specified by 
@@ -130,7 +172,10 @@ public class PasswordCrack {
 					hash += Integer.toHexString(0xFF & b);
 				}
 				
+				hash = new String(data, "UTF-8");
+				
 				//Return a string of the hex value
+				
 				return hash;
 			}
 			
