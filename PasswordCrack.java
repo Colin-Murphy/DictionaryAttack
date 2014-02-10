@@ -169,13 +169,12 @@ public class PasswordCrack {
 				//String representation of the hex
 				String hash = "";
 				for (byte b : data) {
+					//Convert that byte to a hex string, append it to the hash
 					hash += Integer.toHexString(0xFF & b);
 				}
-				
-				hash = new String(data, "UTF-8");
+								
 				
 				//Return a string of the hex value
-				
 				return hash;
 			}
 			
