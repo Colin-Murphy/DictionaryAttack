@@ -134,16 +134,24 @@ public class PasswordCrack {
 			return;
 		}
 		
-		
+		/*
 		for (User u: users) {
 			System.out.print(u.getUsername());
 			System.out.println(": " + u.getHashedPassword());
 		}
 		
+		*/
 		
+		Map<String, String> map = new Map<String, String>();
+		
+		ArrayList<Thread> hashers = new ArrayList<Thread>();
 		
 		for (String password:passwords) {
-			System.out.println(password);
+			hashers.add(new Hasher<password, map>().start());
+		}
+		
+		for (Thread t: hashers) {
+			t.join();
 		}
 
 	}//End of PasswordCrack constructor
@@ -172,7 +180,7 @@ public class PasswordCrack {
 					//Convert that byte to a hex string, append it to the hash
 					hash += Integer.toHexString(0xFF & b);
 				}
-								
+				
 				
 				//Return a string of the hex value
 				return hash;
