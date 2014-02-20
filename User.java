@@ -1,5 +1,5 @@
 /**
-	Models a user from the database file to make storing and accessing easier.
+	A thread that compares the users password from the dictionary to the map of hashed passwords
 	
 	Designed for RIT Concepts of Paralel and Distributed Systems Project 1
 	
@@ -7,40 +7,38 @@
 	@version 2/7/14
 */
 
-public class User {
-	//Username for the user… wow this comment is useless
+//Import map
+import java.util.*;
+
+public class User implements Runnable {
+	//Username for the user
 	String username = "";
 	//Users password as represented by the SHA256 hash
 	String hashedPassword = "";
-	//Users password determined by the dictionary attack
-	String textPassword = "";
 	
-	public User(String username, String hashedPassword) {
+	Map<String, String> map;
+
+	
+	public User(String username, String hashedPassword, Map<String,String> map) {
 		this.username = username;
 		this.hashedPassword = hashedPassword;
+		this.map = map;
 	}
 	
-	/**
-		Set the plain text password of a user.
-		@param String the plain text password to store
-	*/
-	public void setTextPassword(String textPassword) {
-		this.textPassword = textPassword;
-	}
 	
-	/**
-		Getter for the hashed password
-		@return String SHA256 representation of the users password
-	*/
-	public String getHashedPassword() {
-		return hashedPassword;
-	}
-	/**
-		Getter for the username
-		@return String username
-	*/
-	public String getUsername() {
-		return username;
+	public synchronized void run() {
+		while (!map.containsKey(hashedPassword)) {
+			try {
+				System.out.println("Wait");
+				wait();
+			}
+			catch (InterruptedException e) {
+				System.err.println("Interrupted");
+			}
+		}
+		
+		System.out.println(username + " " + map.get(hashedPassword));
+	
 	}
 	
 }
