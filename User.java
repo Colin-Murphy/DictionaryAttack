@@ -28,8 +28,6 @@ public class User implements Runnable {
 	private Map<String, String> map;
 	//The number of chances that the password can be broken (used to break out of the run.
 	private int chances;
-	//Last capacity of the map when it was checked
-	private int progress = 0;
 	//Lock for readers
 	private Lock readLock;
 	//Thread id for knowing when its turn to print has come up
