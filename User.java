@@ -11,6 +11,8 @@
 import java.util.*;
 //Locks
 import java.util.concurrent.locks.Lock;
+//Atomic Integer
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class User implements Runnable {
 	//Username for the user
@@ -26,43 +28,57 @@ public class User implements Runnable {
 	
 	//Lock for readers
 	private Lock readLock;
+	//Thread id for knowing when its turn to print has come up
+	private int id;
+	//Shared integer for tracking the print id for threads
+	private AtomicInteger printID;
 
 	
 	public User(String username, String hashedPassword, Map<String,String> map, 
-		Lock readLock, int chances) {
+		Lock readLock, int chances, int id, AtomicInteger printID) {
 		
 		this.username = username;
 		this.hashedPassword = hashedPassword;
 		this.map = map;
 		this.chances = chances;
 		this.readLock = readLock;
+		this.id = id;
+		this.printID = printID;
 	}
 	
 	
 	public  void run() {
 		synchronized(map) {
 			//Wait until every password has been hashed or our password has been found
-			while (map.size() < chances && !keyFound()) {
+			while (map.size() != chances && !keyFound()) {
 				try {
-					//System.out.println("Wait");
 					map.wait();
 				}
 				catch (InterruptedException e) {
-					System.err.println("Interrupted");
 				}
 			}
-			//Print the key if its there
-			if (keyFound()) {
-				readLock.lock();
-				System.out.println(username + " " + map.get(hashedPassword));
-				readLock.unlock();
+			//Print the key if its there after waiting for our turn
+			synchronized(printID) {
+				while (printID.get() != id) {
+					try {
+						System.out.println("Wait " + username);
+						printID.wait();
+					}
+					catch (InterruptedException e) {}
+				}
+				if (keyFound()) {
+					readLock.lock();
+					System.out.println(username + " " + map.get(hashedPassword));
+					readLock.unlock();
+				}
+				printID.addAndGet(1);
+				printID.notifyAll();
 			}
-
 		}
+
 	}
 	/**
 		Checks if the hashed password is in the dictionary
-		This is done because reimplementing the entire hashmap is somewhat overkill.
 		No parameters are needed, this class knows its key
 		@return boolean Whether of not the key is in the map
 	*/

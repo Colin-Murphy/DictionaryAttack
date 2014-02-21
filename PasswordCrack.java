@@ -35,6 +35,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+//Atomic Integer
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class PasswordCrack {
@@ -129,13 +131,18 @@ public class PasswordCrack {
 		readLock = base.readLock();
 		writeLock = base.writeLock();
 		
+		AtomicInteger printID = new AtomicInteger();
+		
 		//Parse input and start thread group 2 (users)
 		try {
+			int i = 0;
 			while((line = reader.readLine()) !=null) {
 				String[] tokens = line.split("\\s+");
-				Thread t = new Thread(new User(tokens[0],tokens[1], map, readLock, passwords.size()));
+				Thread t = new Thread(new User(tokens[0],tokens[1], map, readLock, passwords.size(),
+				i, printID));
 				t.start();
 				users.add(t);
+				i++;
 				
 			}
 		}
