@@ -1,8 +1,5 @@
 /**
-	PasswordCrack performs a dictionary attack on a provided database using a 
-	provided dictionary file. It imlements multi threading and is an example
-	of proper thread design.
-	
+	File: PasswordCrack.java	
 	Designed for RIT Concepts of Paralel and Distributed Systems Project 1
 	
 	@author Colin L Murphy <clm3888@rit.edu>
@@ -29,8 +26,6 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 //Maps
 import java.util.*;
-//Semaphore used to block in critical sections
-import java.util.concurrent.Semaphore;
 //Locks
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -39,15 +34,24 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
+
+/**
+	PasswordCrack performs a dictionary attack on a provided database using a 
+	provided dictionary file. It imlements multi threading and is an example
+	of proper thread design.
+*/
 public class PasswordCrack {
 	
-	//Number of times to hash the given password
-	private int numHashes = 100000;
 	//Locks for the threads
 	private static ReadWriteLock base = new ReentrantReadWriteLock();
 	private static Lock readLock = base.readLock();
 	private static Lock writeLock = base.writeLock();
 	
+	/**
+		Open the input files and create a new instance of PasswordCrack
+		@param args[0] String The path for the dictionary file
+		@param argsp[1] String for the path to the database file
+	*/
 	public static void main(String args[]) throws Throwable {
 		//Insure proper amount of arguments
 		if (args.length != 2) {
@@ -90,6 +94,7 @@ public class PasswordCrack {
 			System.err.println("File " + dictionaryFile.getName() + 
 				" does not exist");
 			System.exit (1);
+			//End the program
 			return;
 		}
 		
@@ -118,6 +123,7 @@ public class PasswordCrack {
 			System.err.println("File " + databaseFile.getName() + 
 				" does not exist");
 			System.exit (1);
+			//End the program
 			return;
 		}
 		
@@ -131,17 +137,24 @@ public class PasswordCrack {
 		readLock = base.readLock();
 		writeLock = base.writeLock();
 		
+		//Shared integer to track what thread should print
 		AtomicInteger printID = new AtomicInteger();
 		
 		//Parse input and start thread group 2 (users)
 		try {
+			//The threads id (goes from 0 to size of users)
 			int i = 0;
 			while((line = reader.readLine()) !=null) {
+				//Split into tokens at any whitespace
 				String[] tokens = line.split("\\s+");
+				//Create and run a new thread
 				Thread t = new Thread(new User(tokens[0],tokens[1], map, readLock, passwords.size(),
 				i, printID));
+				//Start the thread
 				t.start();
+				//Add the thread to the group
 				users.add(t);
+				//Incriment the threads id
 				i++;
 				
 			}
