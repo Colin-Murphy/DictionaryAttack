@@ -31,38 +31,32 @@ import java.io.FileNotFoundException;
 import java.util.*;
 //Semaphore used to block in critical sections
 import java.util.concurrent.Semaphore;
+//Locks
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class PasswordCrack {
 	
 	//Number of times to hash the given password
 	private int numHashes = 100000;
-	private Semaphore semaphore = new Semaphore(1);
+	//Locks for the threads
+	private static ReadWriteLock base = new ReentrantReadWriteLock();
+	private static Lock readLock = base.readLock();
+	private static Lock writeLock = base.writeLock();
 	
 	public static void main(String args[]) throws Throwable {
 		//Insure proper amount of arguments
 		if (args.length != 2) {
 			System.err.println("Usage: java PasswordCrack <dictionaryFile> " + 
-				"<databaseFile");
+				"<databaseFile>");
 			//Were done here
 			return;
 		}
 		
 		File dictionaryFile = new File(args[0]);
-		/*
-		if (!dictionaryFile.exists()) {
-			System.err.println("Error " + args[0] + " does not exist.");
-			return;
-		}
-		*/
 		File databaseFile = new File(args[1]);
-		/*
-		if (!dictionaryFile.exists()) {
-			System.err.println("Error: " + args[1] + " does not exist.");
-			return;
-		}
-		*/
-		
 		
 		//If we got here then the input appears to be good
 		new PasswordCrack(dictionaryFile, databaseFile);
@@ -130,10 +124,16 @@ public class PasswordCrack {
 		//Arraylist of user threads
 		ArrayList<Thread> users = new ArrayList<Thread>();
 		
+		//Locks for the threads
+		base = new ReentrantReadWriteLock();
+		readLock = base.readLock();
+		writeLock = base.writeLock();
+		
+		//Parse input and start thread group 2 (users)
 		try {
 			while((line = reader.readLine()) !=null) {
 				String[] tokens = line.split("\\s+");
-				Thread t = new Thread(new User(tokens[0],tokens[1], map));
+				Thread t = new Thread(new User(tokens[0],tokens[1], map, readLock, passwords.size()));
 				t.start();
 				users.add(t);
 				
@@ -148,7 +148,7 @@ public class PasswordCrack {
 		//Arraylist of the hashers threads
 		ArrayList<Thread> hashers = new ArrayList<Thread>();
 		for (String password:passwords) {
-			Thread t = new Thread(new Hasher(password, map, semaphore));
+			Thread t = new Thread(new Hasher(password, map, writeLock));
 			t.start();
 			hashers.add(t);
 		}
@@ -161,6 +161,7 @@ public class PasswordCrack {
 		for (Thread t: hashers) {
 			t.join();
 		}
+		
 		
 
 	}//End of PasswordCrack constructor

@@ -5,8 +5,8 @@ import java.security.MessageDigest;
 //Must be caught to support sha-256 hashing
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-//Semaphore used to block in critical sections
-import java.util.concurrent.Semaphore;
+//Locks
+import java.util.concurrent.locks.Lock;
 
 public class Hasher implements Runnable {
 	
@@ -19,52 +19,63 @@ public class Hasher implements Runnable {
 	//Number of times to perform the hash
 	private int numHashes = 100000;
 	
-	//Semaphore used to block in critical sections
-	private Semaphore semaphore;
+	//Lock used to prevent concurrent writes
+	private Lock writeLock;
 	
-	public Hasher(String password, Map<String,String> map, Semaphore semaphore) {
+	public Hasher(String password, Map<String,String> map, Lock writeLock) {
 		this.map = map;
 		this.password = password;
-		this.semaphore = semaphore;
+		this.writeLock = writeLock;
 	}
 	
-	public synchronized void run() {
+	public  void run() {
 		try {
-				MessageDigest md = MessageDigest.getInstance("SHA-256");
-				byte[] data = password.getBytes("UTF-8");
-				
-				//Hash it as many times as defined by numHashes
-				for (int i=0; i<numHashes; i++) {
-					md.update(data);
-					data = md.digest();
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			byte[] data = password.getBytes("UTF-8");
+			
+			//Hash it as many times as defined by numHashes
+			for (int i=0; i<numHashes; i++) {
+				md.update(data);
+				data = md.digest();
+			}
+			
+			//String representation of the hex
+			String hash = "";
+			for (byte b : data) {
+				//Convert that byte to a hex string, append it to the hash
+				String hex = Integer.toHexString(0xFF & b);
+				if (hex.length() == 1) {
+					hash += "0";
 				}
-				
-				//String representation of the hex
-				String hash = "";
-				for (byte b : data) {
-					//Convert that byte to a hex string, append it to the hash
-					hash += Integer.toHexString(0xFF & b);
-				}
-				
-				
-				//acquire the semaphore or block (beginning of critical section)
-				semaphore.acquireUninterruptibly();
+				hash += hex;
+			}
+
+			
+			try {
+				writeLock.lock();
 				//Add the data to the map
 				map.put(hash, password);
-				notifyAll();
-				//release the semaphore (end of critical section)
-				semaphore.release();
 			}
-			
-			//Handle exceptions
-			catch(UnsupportedEncodingException e) {
-				System.err.println(e);
+			finally {
+				writeLock.unlock();
 			}
-			
-			catch(NoSuchAlgorithmException e) {
-				System.err.println(e);
+			//Let all the users know a new password is ready
+			synchronized (map){ 
+				map.notifyAll();
 			}
+		}
+		
+		//Handle exceptions
+		catch(UnsupportedEncodingException e) {
+			System.err.println(e);
+		}
+		
+		catch(NoSuchAlgorithmException e) {
+			System.err.println(e);
+		}
 	}
+
+
 	
 	
 	
