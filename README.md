@@ -1,6 +1,8 @@
 DictionaryAttack 
 ================
 
+Test update
+
 CSCI 251-02 Project 1 - Dictionary Attack
 
 Project description: http://www.cs.rit.edu/~ark/251/p1/p1.shtml
